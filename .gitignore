@@ -1,0 +1,7 @@
+checkpoints/
+data/
+exp/
+record/
+
+*.wav
+*.pth
