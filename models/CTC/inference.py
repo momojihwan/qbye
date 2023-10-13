@@ -1,35 +1,38 @@
 
 from tqdm import tqdm 
-import numpy as np 
-import math 
-import time 
+import logging
 
-import utils
+import numpy as np
+import os
 import models
+from utils.create_database import create_database_ctc
 
-def inference_ctc(matrix_learned_phoneme, matrix_w, matrix_probs):
-    model_path = "./models/KWS/"
-    asr_model = 
+def make_example_list(audio_path):
+    audio_file = []
+    audio_file_list = os.listdir(audio_path)
+    for file in audio_file_list:
+        audio_file.append(os.path.join(audio_path,file))
+    return audio_file
 
+# def inference_ctc(matrix_learned_phoneme, matrix_w, matrix_probs):
+def inference_ctc(asr_config, model_path, audio_path):
+    audio_file = make_example_list(audio_path)
+    matrix_learned_token, matrix_w, matrix_probs, token_list = create_database_ctc(asr_config, model_path, audio_file)
+    
     # chose threshold
-    upper_boundary, lower_boundary = models.CTC.threshold_ctc(matrix_learned_phoneme, matrix_w, matrix_probs)
-    print(upper_boundary, lower_boundary)
+    upper_boundary, lower_boundary = models.CTC.threshold_ctc(matrix_learned_token, matrix_w, matrix_probs, token_list)
     threshold = lower_boundary
-    while(1):
-        input("press enter to record : ")
-        utils.record()
-        path = "record/example.wav"
-        files = [path]
-        score = models.CTC.score_ctc(path, matrix_learned_phoneme, matrix_w)
-
-        for fname, trans in zip(files, asr_model.transcribe(paths2audio_files=files, logprobs=0)):
-            phoneme = trans
-
-        print(phoneme, "\n")
-        print("threshold : ", threshold)
-        print("score : ", score)
-        if score > threshold:
-            print("KEYWORD")
-        else:
-            print("NON-KEYWORD")
+    # while(1):
+        # input("press enter to record : ")
+        # utils.record()
+    path = "record/example.wav"
+    files = [path]
+    score, predicted_token = models.CTC.score_ctc(asr_config, model_path, path, matrix_learned_token, matrix_w)
+    print(predicted_token, "\n")
+    print("threshold : ", threshold)
+    print("score : ", score)
+    if score > threshold:
+        print("KEYWORD")
+    else:
+        print("NON-KEYWORD")
             

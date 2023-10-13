@@ -1,21 +1,20 @@
 import models
-import util
+import utils
 import numpy as np
 import math
 
-def threshold_ctc(matrix_learned_phoneme, matrix_w, matrix_probs):
+def threshold_ctc(matrix_learned_token, matrix_w, matrix_probs, vocabs):
     scores = []
-    print(matrix_learned_phoneme)
+    print(matrix_learned_token)
 
-    for phoneme in matrix_learned_phoneme:
+    for token in matrix_learned_token:
         logprobs = []
         for pr in matrix_probs:
-            probs = models.CTC.CTCforward(learned_phoneme=phoneme, matrix=pr)
+            probs = models.CTC.CTCforward(learned_token=token, matrix=pr, vocabs=vocabs)
             logprobs.append(np.log(probs))
 
         score = sum([logprobs[i] * matrix_w[i] for i in range(len(matrix_w))])
         scores.append(score)
-
     mean = np.mean(scores)
 
     std = np.std(scores)

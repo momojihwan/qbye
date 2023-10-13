@@ -58,9 +58,9 @@ class stream_audio():
             for i in range(3): #(self.args.num_anchor):
                 
                 input("Press enter to record : ")
-                utils.record()
+                utilㄴ.record()
                 _, signal = wavfile.read('record/record/example.wav')
-                mel, _ = utils.fbank(signal, samplerate=16000,
+                mel, _ = utilㄴ.fbank(signal, samplerate=16000,
                                      winlen=0.025, winstep=0.012, nfilt=64)    
                 self.path.append(mel)
                 
@@ -71,13 +71,13 @@ class stream_audio():
             for i in range(3): #(self.args.num_anchor):
                 
                 input("Press enter to record : ")
-                utils.record()    
-                ex_path = "record/example.wav"
+                utilㄴ.record()    
+                ex_path = "record/example{}.wav".format(i)
                 self.path.append(ex_path)
 
-        self.matrix_learned_phoneme, self.matrix_w, self.matrix_probs = utils.create_database_ctc(self.path)
+        self.matrix_learned_token, self.matrix_w, self.matrix_probs = utilㄴ.create_database_ctc(self.path)
         
-        self.lower_boundary, self.upper_boundary = models.CTC.threshold_ctc(self.matrix_learned_phoneme, self.matrix_w, self.matrix_probs)
+        self.lower_boundary, self.upper_boundary = models.CTC.threshold_ctc(self.matrix_learned_token, self.matrix_w, self.matrix_probs)
         print("Confidence interval: ", self.lower_boundary, self.upper_boundary)
         '''
         NEXT: Streaming
@@ -108,14 +108,14 @@ class stream_audio():
                 data = self.q.get()
                 file_name = "record/now.wav"
 
-                path_wavfile = utils.save_wavefile(data=data,
+                path_wavfile = utilㄴ.save_wavefile(data=data,
                                                    file_name = file_name,
                                                    stream = self.audio,
                                                    channels = self.channels,
                                                    sample_format = pyaudio.paInt16,
                                                    sample_rate = self.sample_rate)
                 threshold = models.CTC.score_ctc(path= path_wavfile,
-                                            matrix_learned_phoneme = self.matrix_learned_phoneme,
+                                            matrix_learned_phoneme = self.matrix_learned_token,
                                             matrix_w = self.matrix_w)
                 
                 print("Threshold: ", threshold)

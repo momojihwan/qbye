@@ -1,39 +1,45 @@
 import torch 
 import numpy as np 
-import torch.tensor
+import librosa
+
 # import math
-import util
+import utils
 import models
+from utils.create_database import Speech2Text
 
 
-def score_stream(data, matrix_learned_phoneme, matrix_w):
-    model_path = "./checkpoints/CTC/"
-    asr_model = 
-    logprobs = []
-    tensor_probs = asr_model.transcribe(data, logprobs=1)
-    tensor_probs = np.exp(tensor_probs.numpy())
-
-    for phoneme in matrix_learned_phoneme:
-        probs = models.CTC.CTCforward(learned_phoneme=phoneme, matrix=tensor_probs)
-        logprobs.append(np.log(probs))
-        
-    score = sum([i*j for i, j in zip(logprobs, matrix_w)])
-    return score
-
-def score_ctc(path, matrix_learned_phoneme, matrix_w):
-    model_path = "./checkpoints/CTC/"
-    asr_model = 
-    # calculate score
-    files = [path]
-    logprobs = []
-    for fname, prob in zip(files, asr_model.transcribe(paths2audio_files=files, logprobs=1)):
-        tensor_probs = prob
+def score_ctc(
+        asr_config, 
+        asr_model, 
+        audio_file, 
+        matrix_learned_token, 
+        matrix_w):
     
-    tensor_probs = np.exp(tensor_probs.numpy())
+    speech2text_kwargs = dict(
+    asr_train_config=asr_config,
+    asr_model_file=asr_model,
+    )
 
-    for phoneme in matrix_learned_phoneme:
-        probs = models.CTC.CTCforward(learned_phoneme=phoneme, matrix=tensor_probs)
+    espnet_model = Speech2Text(**speech2text_kwargs)
+    token_list = espnet_model.token_list
+    # calculate score
+    
+    logprobs = []
+    audio_, _ = librosa.load(audio_file)
+        
+    logits, results = espnet_model(audio_)
+    logits = logits.log_softmax(-1)
+
+    for n, (text, token, token_int, hyp) in zip(
+            range(1, espnet_model.nbest + 1), results
+        ):
+        predicted_token = token        
+        
+    tensor_probs = np.exp(logits.numpy())
+
+    for token in matrix_learned_token:
+        probs = models.CTC.CTCforward(learned_token=token, matrix=tensor_probs, vocabs=token_list)
         logprobs.append(np.log(probs))
 
     score = sum([i * j for i, j in zip(logprobs, matrix_w)])
-    return score
+    return score, predicted_token
